@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "272675425730",
+    "firebase_url": "https://memebattle-f1871.firebaseio.com",
+    "project_id": "memebattle-f1871",
+    "storage_bucket": "memebattle-f1871.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:272675425730:android:f949692126022cb3",
+        "android_client_info": {
+          "package_name": "memebattle.aayushf.memebattle"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "272675425730-m4io13tbs5qp9hmoi8sqvoul0op2frnj.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "memebattle.aayushf.memebattle",
+            "certificate_hash": "bae8ef9df3961809711f2a79ddb0dae1ed7f1a34"
+          }
+        },
+        {
+          "client_id": "272675425730-49u6fqqn9uiueq5rqaqchspjq4hgiaug.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAIsnHb0yBtdj8DIvh7zXwlg9Xs5mnKx8g"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "272675425730-49u6fqqn9uiueq5rqaqchspjq4hgiaug.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
