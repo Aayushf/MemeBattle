@@ -63,21 +63,24 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun View.disappear() {
-
-//        val r = Math.sqrt((width*width + height*height).toDouble())
-//        val anim = ViewAnimationUtils.createCircularReveal(this, this.x.toInt(), this.y.toInt(), r.toFloat(), 0f)
-//        anim.start()
+        val animator = android.animation.AnimatorInflater.loadAnimator(this@MainActivity, R.animator.alpha_animator_out)
+        animator.setTarget(this)
+        animator.start()
         this.visibility = View.INVISIBLE
+
 
     }
 
     fun View.appear() {
-//        val r = Math.sqrt((width*width + height*height).toDouble())
-//        val anim = ViewAnimationUtils.createCircularReveal(this, this.x.toInt(), this.y.toInt(), 0f, r.toFloat())
+        val animator = android.animation.AnimatorInflater.loadAnimator(this@MainActivity, R.animator.alpha_animator_in)
+        animator.setTarget(this)
         this.visibility = View.VISIBLE
-//        anim.start()
+        animator.start()
 
     }
+//
+
+
 
     private fun allgone() {
         join_game_card.disappear()
@@ -91,6 +94,7 @@ class MainActivity : AppCompatActivity() {
         rv_main.disappear()
         fab_share.disappear()
         below_subtitle_text.disappear()
+        dimmer.disappear()
     }
 
     operator fun StorageReference.get(ref: String): StorageReference {
@@ -214,6 +218,7 @@ class MainActivity : AppCompatActivity() {
         join_game_card.disappear()
         main_pager.disappear()
         rv_main.disappear()
+        dimmer.disappear()
     }
 
     val cloud = FirebaseStorage.getInstance().reference
@@ -267,13 +272,8 @@ class MainActivity : AppCompatActivity() {
                 rv_main.adapter = GameResultAdapter()
                 start_game_fab.appear()
                 start_game_fab.onClick {
-                    start_game_fab.onClick {
-                        gameid = UUID.randomUUID().toString().substring(0, 7)
-                        host = true
-                    }
-                    allgone()
-                    join_game_card.appear()
 
+                    startActivity<MainActivity>()
                 }
 
 
@@ -440,7 +440,7 @@ class MainActivity : AppCompatActivity() {
                 start_game_fab.onClick {
                     +roundsref
                 }
-                start_game_fab.setImageDrawable(IconicsDrawable(this).icon(CommunityMaterial.Icon.cmd_arrow_right).color(Color.BLUE).sizeDp(24))
+                start_game_fab.setImageDrawable(IconicsDrawable(this).icon(CommunityMaterial.Icon.cmd_chevron_double_right).color(Color.BLUE).sizeDp(24))
             } else {
                 start_game_fab.disappear()
             }
@@ -479,7 +479,7 @@ class MainActivity : AppCompatActivity() {
                     }
                     rv_main.adapter = ResultsAdapter(listOfResults)
                     start_game_fab.appear()
-                    start_game_fab.setImageDrawable(IconicsDrawable(this).icon(CommunityMaterial.Icon.cmd_arrow_right).color(Color.BLUE).sizeDp(24))
+                    start_game_fab.setImageDrawable(IconicsDrawable(this).icon(CommunityMaterial.Icon.cmd_chevron_double_right).color(Color.BLUE).sizeDp(24))
                     start_game_fab.onClick {
                         startRound()
                     }
@@ -487,6 +487,7 @@ class MainActivity : AppCompatActivity() {
                     val roundwinner = listOfResults.maxBy { p ->
                         p.first.second
                     }?.first?.first
+                    dimmer.appear()
                     title_text.text = "$roundwinner Wins This Round!"
 
 
@@ -628,6 +629,7 @@ class MainActivity : AppCompatActivity() {
                 holder.card.onClick {
                     selectedmeme = list[position]
                     holder?.fabSelect.appear()
+                    holder?.fabSelect.setImageDrawable(IconicsDrawable(this@MainActivity).icon(CommunityMaterial.Icon.cmd_heart_outline).color(Color.BLUE).sizeDp(24))
                 }
             }
             holder?.fabSelect?.disappear()
@@ -793,6 +795,27 @@ class MainActivity : AppCompatActivity() {
                     false
                 }
             }.withIcon(CommunityMaterial.Icon.cmd_share_variant)
+            primaryItem {
+                name = "Send Feedback"
+                onClick { _ ->
+                    alert {
+                        customView {
+                            title = "Enter Your Feedback Below"
+                            var e: EditText? = null
+                            textInputLayout {
+                                e = editText {
+
+                                }
+                            }
+                            positiveButton("Send Feedback") {
+                                email("aayushf@gmail.com", "MemeBattle Beta Feedback", "${e!!.text.toString()}")
+
+                            }
+                        }
+                    }.show()
+                    false
+                }
+            }.withIcon(CommunityMaterial.Icon.cmd_lightbulb_on_outline)
             switchItem {
                 name = "Debug?"
                 onSwitchChanged { drawerItem, button, isEnabled ->
