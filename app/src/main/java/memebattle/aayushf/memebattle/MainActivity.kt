@@ -37,6 +37,8 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.request.animation.GlideAnimation
 import com.bumptech.glide.request.target.SimpleTarget
 import com.bumptech.glide.request.target.Target
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.MobileAds
 import com.google.firebase.database.*
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
@@ -95,6 +97,7 @@ class MainActivity : AppCompatActivity() {
         fab_share.disappear()
         below_subtitle_text.disappear()
         dimmer.disappear()
+        progress_card.disappear()
     }
 
     operator fun StorageReference.get(ref: String): StorageReference {
@@ -186,10 +189,16 @@ class MainActivity : AppCompatActivity() {
     operator fun UploadTask.plus(run: () -> Unit) {
         this.addOnSuccessListener {
             debug("Upload Success")
+            uploading = false
+            progress_card.disappear()
             run()
         }
         this.addOnFailureListener {
             debug("Upload Failed")
+        }.addOnProgressListener { ts: UploadTask.TaskSnapshot ->
+            uploading = true
+            progress_card.appear()
+            pbmain.setProgress((((ts.bytesTransferred) / (ts.totalByteCount)) * 100).toInt(), true)
         }
     }
 
@@ -219,6 +228,7 @@ class MainActivity : AppCompatActivity() {
         main_pager.disappear()
         rv_main.disappear()
         dimmer.disappear()
+        progress_card.disappear()
     }
 
     val cloud = FirebaseStorage.getInstance().reference
@@ -232,11 +242,26 @@ class MainActivity : AppCompatActivity() {
     val fbd = FirebaseDatabase.getInstance()
     var name = "-1"
     var host = true
+    var memelist = mutableListOf<Pair<Int, String>>()
+    var memeref = fbd.getReference("-1")
+        set(value) {
+            field = value
+            for (i in 0..7) {
+                value / { p0 ->
+                    p0.children.forEach {
+                        memelist.add(Pair(i, it.getValue(String::class.java)))
+                    }
+                }
+
+            }
+
+        }
 
     var gameref = fbd.getReference("-1")
         set(value) {
             field = value
             curroundref = value["curround"]
+            readinessref = value["a"]
             debug("gameref set")
             playersref = value.child("players")
             roundsref = value["rounds"]
@@ -277,11 +302,17 @@ class MainActivity : AppCompatActivity() {
                 }
 
 
-            } else {
+            } else if (value[0] == 'u') {
                 debug("curround set as $value")
                 gamecloud.child("${value}.jpg") - {
                     curimageUri = it
                 }
+                responded = false
+                curresponsesref = gameref["rounds"][value]["responses"]
+                curselectionsref = gameref["rounds"][value]["selections"]
+                selected = false
+            } else if (value[0] == 'p') {
+                gameref["rounds"][value]["uploader"] / { p0 -> curimageUri = Uri.parse(memelist[p0.getValue(String::class.java).toInt()].second) }
                 responded = false
                 curresponsesref = gameref["rounds"][value]["responses"]
                 curselectionsref = gameref["rounds"][value]["selections"]
@@ -359,6 +390,15 @@ class MainActivity : AppCompatActivity() {
 
 
         }
+    var uploading = false
+        set(value) {
+            field = value
+            if (value) {
+                start_game_fab.disappear()
+            } else {
+                start_game_fab.appear()
+            }
+        }
     var curresponsesref = gameref[curround]["responses"]
         set(value) {
             field = value
@@ -419,6 +459,7 @@ class MainActivity : AppCompatActivity() {
             field = value
             allgone()
             gameref = fbd.getReference(value)
+            memeref = fbd.getReference("Memes")
             title_text.appear()
             title_text.text = value
             subtitle_text.appear()
@@ -436,14 +477,21 @@ class MainActivity : AppCompatActivity() {
             gamecloud = cloud[value]
             card_upload_images.appear()
             debug("gameid set as $value")
-            if (host) {
-                start_game_fab.onClick {
-                    +roundsref
-                }
-                start_game_fab.setImageDrawable(IconicsDrawable(this).icon(CommunityMaterial.Icon.cmd_chevron_double_right).color(Color.BLUE).sizeDp(24))
-            } else {
+            start_game_fab.setImageDrawable(IconicsDrawable(this).icon(CommunityMaterial.Icon.cmd_check).sizeDp(24).color(Color.BLUE))
+            start_game_fab.onClick {
+                myreadinessref.setValue(true)
                 start_game_fab.disappear()
+                progress_card.appear()
+                progress_text.text = "Waiting For Everyone To Get Ready"
             }
+//            if (host) {
+//                start_game_fab.onClick {
+//                    +roundsref
+//                }
+//                start_game_fab.setImageDrawable(IconicsDrawable(this).icon(CommunityMaterial.Icon.cmd_chevron_double_right).color(Color.BLUE).sizeDp(24))
+//            } else {
+//                start_game_fab.disappear()
+//            }
 
         }
     var gamecloud = cloud[gameid]
@@ -497,11 +545,35 @@ class MainActivity : AppCompatActivity() {
             }
 
         }
+    var readinessref = gameref["a"]
+        set(value) {
+            field = value
+            myreadinessref = value[name]
+            if (host) {
+                value + { p0 ->
+                    if (p0.childrenCount.toInt() == allPlayers.size) {
+                        start_game_fab.appear()
+                        start_game_fab.setImageDrawable(IconicsDrawable(this).icon(CommunityMaterial.Icon.cmd_chevron_double_right).color(Color.BLUE).sizeDp(24))
+                        start_game_fab.onClick {
+                            +roundsref
+                        }
+
+
+                    }
+
+                }
+            }
+        }
+    var myreadinessref = readinessref[name]
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         var prefs = getSharedPreferences("PREFS", Context.MODE_PRIVATE)
         name = prefs.getString("NAME_PREF", "-1")
+        MobileAds.initialize(this, "ca-app-pub-3843174364216628~4380375242")
+
+        val request = AdRequest.Builder().addTestDevice("B1E24AC71BF1E757C995C47A7D08B72C").build()
         if (name == "-1") {
             startActivity<IntroActivity>()
             alert {
@@ -521,6 +593,7 @@ class MainActivity : AppCompatActivity() {
             }.show()
         }
         setContentView(R.layout.activity_main)
+        adView.loadAd(request)
         fab_upload_image.onClick {
             CropImage.activity().setGuidelines(CropImageView.Guidelines.ON).setFixAspectRatio(true).start(this@MainActivity)
             debug("Image Upload Clicked")
@@ -539,7 +612,7 @@ class MainActivity : AppCompatActivity() {
         subtitle_text.appear()
         join_game_card.appear()
         below_subtitle_text.appear()
-
+        title = "Start A Game"
 
         //Aesthetic.get().colorPrimaryRes(R.color.colorPrimary).colorAccentRes(R.color.colorAccent).isDark(true).textColorPrimaryRes(R.color.md_white_1000).textColorPrimaryInverseRes(R.color.md_white_1000).textColorSecondaryRes(R.color.md_white_1000).textColorSecondaryInverseRes(R.color.md_white_1000).apply()
 
@@ -587,7 +660,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun addRound(resultUri: Uri) {
-        val roundID = UUID.randomUUID().toString().substring(0, 5)
+        val roundID = "u${UUID.randomUUID().toString().substring(0, 5)}"
         gamecloud + (Pair(resultUri, roundID)) + {
             debug("Adding Round To Database")
             roundsref[roundID]["uploader"].setValue(name)
@@ -597,15 +670,26 @@ class MainActivity : AppCompatActivity() {
 
     fun startRound() {
         debug("Inside startRound()")
+        var r = Random().nextInt(10)
         if (allRounds.size != 0) {
-            val randomInt = Random().nextInt(allRounds.size)
-            curroundref.setValue(allRounds[randomInt])
-            allRounds.removeAt(randomInt)
-        } else {
-            snackbar(start_game_fab, "No More Rounds In Database, Game Complete")
-            if (host) {
-                curroundref.setValue("e")
+            if (r <= 5) {
+                val randomInt = Random().nextInt(allRounds.size)
+                curroundref.setValue(allRounds[randomInt])
+                allRounds.removeAt(randomInt)
+            } else {
+                val roundID = "p${UUID.randomUUID().toString().substring(0, 5)}"
+                roundsref[roundID]["uploader"].setValue(Random().nextInt(memelist.size).toString())
+                curroundref.setValue(roundID)
+
+
+
             }
+
+        } else {
+            val roundID = "p${UUID.randomUUID().toString().substring(0, 5)}"
+            roundsref[roundID]["uploader"].setValue(Random().nextInt(memelist.size).toString())
+            curroundref.setValue(roundID)
+
 
         }
     }
@@ -623,7 +707,10 @@ class MainActivity : AppCompatActivity() {
             }
             if (holder != null) {
                 if (holder.bottomtext != null) {
-                    holder.bottomtext.text = list[position].second.second
+                    if (list[position].second.second != null) {
+                        holder.bottomtext.text = list[position].second.second
+                    }
+
                 }
 
                 holder.card.onClick {
@@ -668,8 +755,8 @@ class MainActivity : AppCompatActivity() {
             if (holder != null) {
                 holder.toptext.text = list[position].second.first
                 holder.bottomtext.text = list[position].second.second
-                holder.name.text = list[position].first.first
-                holder.selections.text = list[position].first.second.toString()
+                holder.name.text = "{cmd-face}${list[position].first.first}"
+                holder.selections.text = "{cmd-thumb-up}${list[position].first.second.toString()}"
             }
 
 
@@ -730,8 +817,8 @@ class MainActivity : AppCompatActivity() {
 
     inner class GameResultAdapter : RecyclerView.Adapter<GameResultAdapter.ViewHolder>() {
         override fun onBindViewHolder(holder: ViewHolder?, position: Int) {
-            holder?.nametv?.text = allPlayers[position].first
-            holder?.pointstv?.text = allPlayers[position].second.toString()
+            holder?.nametv?.text = "{cmd-face} ${allPlayers[position].first}"
+            holder?.pointstv?.text = "{cmd-star-circle} ${allPlayers[position].second.toString()}"
         }
 
         override fun getItemCount(): Int {
@@ -760,7 +847,7 @@ class MainActivity : AppCompatActivity() {
             }
             primaryItem {
                 name = "About This App"
-                onClick { v ->
+                onClick { _ ->
                     startActivity<IntroActivity>()
                     false
 
@@ -818,7 +905,7 @@ class MainActivity : AppCompatActivity() {
             }.withIcon(CommunityMaterial.Icon.cmd_lightbulb_on_outline)
             switchItem {
                 name = "Debug?"
-                onSwitchChanged { drawerItem, button, isEnabled ->
+                onSwitchChanged { _, _, isEnabled ->
                     val prefs = getSharedPreferences("PREFS", Context.MODE_PRIVATE)
                     prefs.edit().putBoolean("DEBUG", isEnabled)
 

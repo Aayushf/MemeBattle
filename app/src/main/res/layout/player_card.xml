@@ -6,41 +6,30 @@
     android:layout_margin="@dimen/default_margin"
     app:cardBackgroundColor="@color/cardBackGround">
 
+
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <com.mikepenz.iconics.view.IconicsImageView
-            android:id="@+id/iv"
+        <com.mikepenz.iconics.view.IconicsTextView
+            android:id="@+id/player_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentStart="true"
-            app:iiv_color="@color/md_white_1000"
-            app:iiv_icon="cmd-face" />
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_toRightOf="@id/iv"
-        android:orientation="vertical">
-
-        <memebattle.aayushf.memebattle.FontedTextView
-            android:id="@+id/player_name"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
             android:layout_margin="@dimen/default_margin"
             android:text="Name"
             android:textAppearance="@style/TextAppearance.AppCompat.Headline"
             app:textfont="SemiBold" />
 
-        <memebattle.aayushf.memebattle.FontedTextView
+        <com.mikepenz.iconics.view.IconicsTextView
             android:id="@+id/player_points"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
             android:layout_margin="@dimen/default_margin"
             android:text="Points"
             android:textAppearance="@style/TextAppearance.AppCompat.Headline"
             app:textfont="SemiBold" />
-    </LinearLayout>
     </RelativeLayout>
 
 

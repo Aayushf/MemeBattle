@@ -3,6 +3,7 @@ package memebattle.aayushf.memebattle
 import android.content.Context
 import android.content.res.TypedArray
 import android.graphics.Canvas
+import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Typeface
 import android.util.AttributeSet
@@ -12,7 +13,7 @@ import com.mikepenz.iconics.view.IconicsTextView
 /**
  * Created by aayushf on 3/11/17.
  */
-open class FontedTextView(c: Context, a: AttributeSet) : IconicsTextView(c, a) {
+open class FontedOutlineTextView(c: Context, a: AttributeSet) : IconicsTextView(c, a) {
     var fontStyle = ""
 
     init {
@@ -28,16 +29,16 @@ open class FontedTextView(c: Context, a: AttributeSet) : IconicsTextView(c, a) {
 
 
     }
-//
-//    override fun onDraw(canvas: Canvas?) {
-//        paint.style= Paint.Style.FILL
-//        super.onDraw(canvas)
-//        paint.style = Paint.Style.STROKE
-//        paint.strokeWidth = 2f
-//        setTextColor(0x000000)
-//        super.onDraw(canvas)
-//        setTextColor(0xFFFFFF)
-//    }
+
+    override fun onDraw(canvas: Canvas?) {
+        paint.style = Paint.Style.FILL
+        super.onDraw(canvas)
+        paint.style = Paint.Style.STROKE
+        paint.strokeWidth = 4.5f
+        setTextColor(Color.BLACK)
+        super.onDraw(canvas)
+        setTextColor(Color.WHITE)
+    }
 
 
 }
